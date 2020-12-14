@@ -1,6 +1,6 @@
 using Scat
+using FFTW
 using Test
 
-@testset "Scat.jl" begin
-    # Write your tests here.
-end
+include("test_filterBank.jl")
+include("test_filter.jl")
