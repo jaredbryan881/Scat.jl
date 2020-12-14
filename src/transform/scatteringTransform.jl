@@ -4,3 +4,4 @@ struct ScatteringTransform1d <: ScatteringTransform
     D::Int # depth/number of layers
     J::Int # number of scales/number of wavelets in the filterbank
 end
+depth(S::ScatteringTransform1d) = S.D
