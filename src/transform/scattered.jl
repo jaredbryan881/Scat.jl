@@ -10,7 +10,7 @@ A structure for scattering coefficients.
 ## Fields: Scattered1d
  | **Field** | **Description** |
  |:----------|:----------------|
- | :R        | signal length |
+ | :T        | signal length |
  | :nFilters | number of filters per layer |
  | :Coeff    | scattering coefficients |
 """
