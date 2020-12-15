@@ -1,3 +1,5 @@
+export scatter1d
+
 """
     scatter1d_layer(S, i, x_hat, Transform, FilterBanks)
 
