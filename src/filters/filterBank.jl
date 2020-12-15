@@ -1,6 +1,4 @@
-export get_filter_params, FilterBank1d
-
-abstract type AbstractFilterBank end
+export get_filter_params, FilterBank1d, get_FilterBanks
 
 """
     ξmax(Q)
@@ -143,6 +141,9 @@ function get_filter_params(Q::Vector{Int64}, J::Int64, σ0::Float64; rψ::Float6
     return σs, ξs, js
 end
 
+
+abstract type AbstractFilterBank end
+
 """
     FilterBank1d
 
@@ -180,4 +181,21 @@ struct FilterBank1d <: AbstractFilterBank
 
         return new(N, J, Q, ω, ϕ, Λ)
     end
+end
+
+function get_FilterBanks(N::Int64, Q::Vector{Int64}, J::Vector{Int64}, σ0::Vector{Float64}; rψ::Float64=sqrt(0.5), α::Float64=5.0)
+    FilterBanks=Vector{FilterBank1d}(undef, length(Q))
+    for i=1:length(Q)
+        FilterBanks[i] = FilterBank1d(N, Q[i], J[i], σ0[i])
+    end
+    return FilterBanks
+end
+function get_FilterBanks(N::Int64, Q::Vector{Int64}, J::Vector{Int64}, σ0::Float64; rψ::Float64=sqrt(0.5), α::Float64=5.0)
+    σ0s = repeat([σ0], length(Q))
+    get_FilterBanks(N, Q, J, σ0s; rψ=rψ, α=α)
+end
+function get_FilterBanks(N::Int64, Q::Vector{Int64}, J::Int64, σ0::Float64; rψ::Float64=sqrt(0.5), α::Float64=5.0)
+    σ0s = repeat([σ0], length(Q))
+    Js = repeat([J], length(Q))
+    get_FilterBanks(N, Q, Js, σ0s; rψ=rψ, α=α)
 end
