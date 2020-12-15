@@ -2,41 +2,41 @@
 @testset "Spectral filter parameters" begin
 # test ξmax
 Q=12 # number of wavelets per octave
-ξ=ξmax(Q)
+ξ=Scat.ξmax(Q)
 @test ξ==1/(1+2^(0.25))
 Q=1 # number of wavelets per octave
-ξ=ξmax(Q)
+ξ=Scat.ξmax(Q)
 @test ξ==0.35
 
 # test σmin
 J=1
 σ0=0.1
-σ = σmin(σ0, J)
+σ = Scat.σmin(σ0, J)
 @test σ==σ0/2.0
 
 # test σmax
 ξ = 1.0
 rψ = 2.718281828459045^(-1/2)
 Q = 1
-σ = σmax(ξ, Q, rψ)
+σ = Scat.σmax(ξ, Q, rψ)
 @test σ==1/3
 
 # test dyadic subsampling
 α=1.0
 ξ=1.0
 σ=1.0
-mds = max_dyadic_subsampling(ξ, σ, α)
+mds = Scat.max_dyadic_subsampling(ξ, σ, α)
 @test mds==0
 α=0.0
 ξ=0.25
 σ=1.0
-mds = max_dyadic_subsampling(ξ, σ, α)
+mds = Scat.max_dyadic_subsampling(ξ, σ, α)
 @test mds==1
 
 σ_min = 0.5
 σ_max = 2.0
 Q = 1
-nds = n_dyadic_steps(Q, σ_min, σ_max)
+nds = Scat.n_dyadic_steps(Q, σ_min, σ_max)
 @test nds==2
 
 # test filter bank parameters
@@ -46,9 +46,9 @@ Q=1
 rψ=sqrt(0.5)
 α=5.0
 σs, ξs, js = get_filter_params(Q, σ_min, rψ=rψ, α=α)
-ξ_max = ξmax(Q)
-σ_max = σmax(ξ_max, Q, rψ)
-nds = n_dyadic_steps(Q, σ_min, σ_max)
+ξ_max = Scat.ξmax(Q)
+σ_max = Scat.σmax(ξ_max, Q, rψ)
+nds = Scat.n_dyadic_steps(Q, σ_min, σ_max)
 collect(0.0:nds+Q-2)
 @test length(σs)==nds+Q-1
 @test length(ξs)==nds+Q-1
@@ -82,4 +82,46 @@ F = FilterBank1d(N, Q, J, σ0, rψ=rψ, α=α)
 # test number of wavelets in the filter bank
 σs, ξs, js = get_filter_params(Q, σ0/2^J, rψ=rψ, α=α)
 @test length(F.Λ)==length(σs)
+end
+
+# test get_FilterBanks
+@testset "Convenience methods for FilterBank1d creation" begin
+N=12
+Q=[12,1]
+J=[8,4]
+σ0=[0.5, 0.1]
+FilterBanks = get_FilterBanks(N,Q,J,σ0)
+@test length(FilterBanks)==length(Q)
+@test (FilterBanks[1].Q==Q[1]) & (FilterBanks[2].Q==Q[2])
+@test (FilterBanks[1].J==J[1]) & (FilterBanks[2].J==J[2])
+
+# common J and σ0
+N=12
+Q=[12,1]
+J=8
+σ0=0.1
+FilterBanks = get_FilterBanks(N,Q,J,σ0)
+@test length(FilterBanks)==length(Q)
+@test (FilterBanks[1].Q==Q[1]) & (FilterBanks[2].Q==Q[2])
+@test (FilterBanks[1].J==J) & (FilterBanks[2].J==J)
+
+# common J
+N=12
+Q=[12,1]
+J=8
+σ0=[0.5, 0.1]
+FilterBanks = get_FilterBanks(N,Q,J,σ0)
+@test length(FilterBanks)==length(Q)
+@test (FilterBanks[1].Q==Q[1]) & (FilterBanks[2].Q==Q[2])
+@test (FilterBanks[1].J==J) & (FilterBanks[2].J==J)
+
+# common σ0
+N=12
+Q=[12,1]
+J=[8, 4]
+σ0=0.1
+FilterBanks = get_FilterBanks(N,Q,J,σ0)
+@test length(FilterBanks)==length(Q)
+@test (FilterBanks[1].Q==Q[1]) & (FilterBanks[2].Q==Q[2])
+@test (FilterBanks[1].J==J[1]) & (FilterBanks[2].J==J[2])
 end
