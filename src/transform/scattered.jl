@@ -1,5 +1,17 @@
 abstract type Scattered end
 
+"""
+    Scattered1d
+
+A structure for scattering coefficients.
+
+## Fields: Scattered1d
+ | **Field** | **Description** |
+ |:----------|:----------------|
+ | :R        | signal length |
+ | :nFilters | number of filters per layer |
+ | :Coeff    | scattering coefficients |
+"""
 struct Scattered1d <: Scattered
     T::Int64 # number of samples in time
     nFilters::Vector{Int64} # number of filters in each layer
