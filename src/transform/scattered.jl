@@ -1,3 +1,5 @@
+export Scattered1d
+
 abstract type Scattered end
 
 """
