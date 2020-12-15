@@ -5,7 +5,7 @@ N=4
 ω=zeros(2^N)
 σ=1.0
 ξ=0.0
-γ = gabor1d(ω, σ, ξ)
+γ = Scat.gabor1d(ω, σ, ξ)
 @test length(γ)==length(ω)
 @test γ==ones(length(ω))
 
@@ -14,7 +14,7 @@ N=4
 σ=1.0/sqrt(2.0)
 ξ=0.0
 ω=FFTW.fftfreq(N)
-γ = gabor1d(N, σ, ξ)
+γ = Scat.gabor1d(N, σ, ξ)
 @test length(γ)==length(ω)
 @test exp.(-ω.^2)≈γ
 
@@ -25,7 +25,7 @@ N=4
 j=1
 γ = GaborWavelet(N, σ, ξ, j)
 @test length(γ.γ)==N
-@test γ.γ == gabor1d(N, σ, ξ)
+@test γ.γ == Scat.gabor1d(N, σ, ξ)
 end
 
 @testset "Gaussian filter" begin
@@ -34,7 +34,7 @@ end
 N=4
 ω=zeros(2^N)
 σ=1.0
-G = gauss1d(ω, σ)
+G = Scat.gauss1d(ω, σ)
 @test length(G)==length(ω)
 @test G==ones(length(ω))
 
@@ -42,7 +42,7 @@ G = gauss1d(ω, σ)
 N=4
 σ=1.0/sqrt(2.0)
 ω=collect(0.0:N-1)./N
-G = gauss1d(N, σ)
+G = Scat.gauss1d(N, σ)
 @test length(G)==length(ω)
 @test exp.(-ω.^2)≈G
 
@@ -53,7 +53,7 @@ N=4
 j=1
 G = GaussianFilter(N, σ)
 @test length(G.ϕ)==N
-@test G.ϕ == gauss1d(N, σ)
+@test G.ϕ == Scat.gauss1d(N, σ)
 end
 
 @testset "Morlet wavelet" begin
@@ -64,7 +64,7 @@ N=4
 ξ=0.0
 G=ones(N)
 γ=ones(N)
-ψ=morlet1d(γ, G)
+ψ=Scat.morlet1d(γ, G)
 @test length(ψ)==N
 @test ψ==zeros(N)
 
@@ -72,7 +72,7 @@ G=ones(N)
 N=4
 σ=1.0/sqrt(2.0)
 ξ=0.0
-ψ=morlet1d(N, σ, ξ)
+ψ=Scat.morlet1d(N, σ, ξ)
 @test length(G)==N
 
 # test both inner constructors for MorletWavelet struct
@@ -85,5 +85,5 @@ G = GaussianFilter(N, σ)
 γ = GaborWavelet(N, σ, ξ, j)
 ψ = MorletWavelet(γ, G)
 @test length(ψ.ψ)==N
-@test ψ.ψ == morlet1d(γ.γ, G.ϕ)
+@test ψ.ψ == Scat.morlet1d(γ.γ, G.ϕ)
 end
