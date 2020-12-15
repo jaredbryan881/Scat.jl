@@ -70,7 +70,7 @@ function n_dyadic_steps(Q::Int64, σ_min::Float64, σ_max::Float64)
 end
 
 """
-    get_filter_params(Q, J, σ0; rψ, α)
+    get_filter_params(Q, J, σ0, rψ=rψ, α=α)
 
 Get the central frequencies, bandwidths, and maximum subsampling for a family of Morlet wavelets.
 
@@ -112,7 +112,7 @@ function get_filter_params(Q::Int64, σ_min::Float64; rψ::Float64=sqrt(0.5), α
 end
 
 """
-    get_filter_params(Q, J, σ0, rψ, α)
+    get_filter_params(Q, J, σ0, rψ=rψ, α=α)
 
 Get the central frequencies, bandwidths, and maximum subsampling for families of
 Morlet wavelets for each layer of the scattering transform.
@@ -183,6 +183,19 @@ struct FilterBank1d <: AbstractFilterBank
     end
 end
 
+"""
+    get_FilterBanks(N, Q, J, σ0, rψ=rψ, α=α)
+
+Get filter banks for every layer.
+
+# Arguments
+- `N::Int64`: log2(signal length)
+- `Q::Vector{Int64}`: Number of wavelets per octave for each layer.
+- `J::Vector{Int64}`: Maximum scale of the filters for each layer
+- `σ0::Vector{Float64}`: Bandwidth of the low-pass filter for each layer
+- `rψ`::Float64: Parameter controlling frequency width of filters.
+- `α::Float64`: Parameter controlling allowable error, with error∝1/α
+"""
 function get_FilterBanks(N::Int64, Q::Vector{Int64}, J::Vector{Int64}, σ0::Vector{Float64}; rψ::Float64=sqrt(0.5), α::Float64=5.0)
     FilterBanks=Vector{FilterBank1d}(undef, length(Q))
     for i=1:length(Q)
@@ -190,10 +203,29 @@ function get_FilterBanks(N::Int64, Q::Vector{Int64}, J::Vector{Int64}, σ0::Vect
     end
     return FilterBanks
 end
+"""
+    get_FilterBanks(N, Q, J, σ0, rψ=rψ, α=α)
+
+Convenience method fo getting filter banks for each layer with common σ0.
+"""
 function get_FilterBanks(N::Int64, Q::Vector{Int64}, J::Vector{Int64}, σ0::Float64; rψ::Float64=sqrt(0.5), α::Float64=5.0)
     σ0s = repeat([σ0], length(Q))
     get_FilterBanks(N, Q, J, σ0s; rψ=rψ, α=α)
 end
+"""
+    get_FilterBanks(N, Q, J, σ0, rψ=rψ, α=α)
+
+Convenience method fo getting filter banks for each layer with common J.
+"""
+function get_FilterBanks(N::Int64, Q::Vector{Int64}, J::Int64, σ0::Vector{Float64}; rψ::Float64=sqrt(0.5), α::Float64=5.0)
+    Js = repeat([J], length(Q))
+    get_FilterBanks(N, Q, Js, σ0; rψ=rψ, α=α)
+end
+"""
+    get_FilterBanks(N, Q, J, σ0, rψ=rψ, α=α)
+
+Convenience method fo getting filter banks for each layer with common σ0 and J.
+"""
 function get_FilterBanks(N::Int64, Q::Vector{Int64}, J::Int64, σ0::Float64; rψ::Float64=sqrt(0.5), α::Float64=5.0)
     σ0s = repeat([σ0], length(Q))
     Js = repeat([J], length(Q))
