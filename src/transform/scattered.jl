@@ -30,6 +30,7 @@ struct Scattered1d <: Scattered
         # higher order scattering coefficients
         for i=1:length(F)
             Coeff[i+1] = Array{Float64,2}(undef, T, length(F[i].Λ))
+            nFilters[i+1] = length(F[i].Λ)
         end
 
         return new(T, nFilters, Coeff)
