@@ -47,7 +47,7 @@ function scatter1d(x::Vector{Float64}, Transform::ScatteringTransform1d, FilterB
     # Transform the signal to the frequency domain
     x_hat = FFTW.fft(x)
     # create Scattered object to hold the scattering coefficients
-    S = Scattered1d(length(x), FilterBanks)
+    S = Scattered1d(FilterBanks)
 
     # zeroth order scattering coefficients are a simple averaging of the
     S.Coeff[1] .= real.(ifft(x_hat .* FilterBanks[1].ϕ.ϕ))
