@@ -4,10 +4,17 @@ x=ones(2^N)
 Q=[12, 1]
 J=[8, 8]
 σ0=0.1
+# test difference in depth and number of filter banks for FilterBank1d
 FilterBanks = get_FilterBanks(N, Q, J, σ0)
 Transform = ScatteringTransform1d(3, Q, J)
-@test_throws AssertionError scat=scatter1d(x, Transform, FilterBanks)
-S=Scattered1d(FilterBanks)
-FilterBanks_changed = get_FilterBanks(N, [8,4], J, σ0)
-@test_throws AssertionError Scat.scatter1d_layer(S, 1, Vector{Complex{Float64}}(undef,10), Transform, FilterBanks_changed)
+@test_throws AssertionError scat=Scat.scatter1d(x, Transform, FilterBanks)
+
+# test difference in depth and number of filter banks for FilterBank1dBlock
+FilterBankBlocks=get_FilterBanks(N, Q, J, σ0, typ=FilterBank1dBlock)
+@test_throws AssertionError scat=Scat.scatter1d(x, Transform, FilterBankBlocks)
+
+# test transform depth
+FilterBankBlocks=get_FilterBanks(N, [12,12,1], [8,8,8], σ0, typ=FilterBank1dBlock)
+Transform = ScatteringTransform1d(3, Q, J)
+@test_throws AssertionError scat=Scat.scatter1d(x, Transform, FilterBankBlocks)
 end
