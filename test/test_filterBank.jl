@@ -85,12 +85,13 @@ F = FilterBank1d(N, Q, J, σ0, rψ=rψ, α=α)
 end
 
 # test get_FilterBanks
-@testset "Convenience methods for FilterBank1d creation" begin
+@testset "FilterBank1d convenience methods" begin
 N=12
 Q=[12,1]
 J=[8,4]
 σ0=[0.5, 0.1]
 FilterBanks = get_FilterBanks(N,Q,J,σ0)
+@test all([typeof(FilterBanks[i])==FilterBank1d for i=1:length(Q)])
 @test length(FilterBanks)==length(Q)
 @test (FilterBanks[1].Q==Q[1]) & (FilterBanks[2].Q==Q[2])
 @test (FilterBanks[1].J==J[1]) & (FilterBanks[2].J==J[2])
@@ -101,6 +102,7 @@ Q=[12,1]
 J=8
 σ0=0.1
 FilterBanks = get_FilterBanks(N,Q,J,σ0)
+@test all([typeof(FilterBanks[i])==FilterBank1d for i=1:length(Q)])
 @test length(FilterBanks)==length(Q)
 @test (FilterBanks[1].Q==Q[1]) & (FilterBanks[2].Q==Q[2])
 @test (FilterBanks[1].J==J) & (FilterBanks[2].J==J)
@@ -111,6 +113,7 @@ Q=[12,1]
 J=8
 σ0=[0.5, 0.1]
 FilterBanks = get_FilterBanks(N,Q,J,σ0)
+@test all([typeof(FilterBanks[i])==FilterBank1d for i=1:length(Q)])
 @test length(FilterBanks)==length(Q)
 @test (FilterBanks[1].Q==Q[1]) & (FilterBanks[2].Q==Q[2])
 @test (FilterBanks[1].J==J) & (FilterBanks[2].J==J)
@@ -121,13 +124,14 @@ Q=[12,1]
 J=[8, 4]
 σ0=0.1
 FilterBanks = get_FilterBanks(N,Q,J,σ0)
+@test all([typeof(FilterBanks[i])==FilterBank1d for i=1:length(Q)])
 @test length(FilterBanks)==length(Q)
 @test (FilterBanks[1].Q==Q[1]) & (FilterBanks[2].Q==Q[2])
 @test (FilterBanks[1].J==J[1]) & (FilterBanks[2].J==J[2])
 end
 
 # test FilterBank1dBlock struct
-@testset "Morlet wavelet filter bank block" begin
+@testset "Filter bank vs block" begin
 # test inner constructor
 N=12
 Q=12
@@ -162,4 +166,28 @@ end
 # test whether gaussian filter is the same
 @test F.ϕ.ϕ==Fblock.ϕ
 @test F.ϕ.σ==Fblock.σg
+end
+
+# test FilterBank1dBlock struct
+@testset "FilterBank1dBlock convenience methods" begin
+# common J and σ0
+Fblocks = get_FilterBanks(12, [12, 1], 8, 0.1, typ=FilterBank1dBlock)
+@test all([typeof(Fblocks[i])==FilterBank1dBlock for i=1:length(Q)])
+@test length(Fblocks)==2
+@test (Fblocks[1].Q==12) & (Fblocks[2].Q==1)
+@test (Fblocks[1].J==8) & (Fblocks[2].J==8)
+
+# common J
+Fblocks = get_FilterBanks(12, [12,1], 8, [0.1, 0.5], typ=FilterBank1dBlock)
+@test all([typeof(Fblocks[i])==FilterBank1dBlock for i=1:length(Q)])
+@test length(Fblocks)==2
+@test (Fblocks[1].Q==12) & (Fblocks[2].Q==1)
+@test (Fblocks[1].J==8) & (Fblocks[2].J==8)
+
+# common σ0
+Fblocks = get_FilterBanks(12, [12,1], [8,4], 0.1, typ=FilterBank1dBlock)
+@test all([typeof(Fblocks[i])==FilterBank1dBlock for i=1:length(Q)])
+@test length(Fblocks)==2
+@test (Fblocks[1].Q==12) & (Fblocks[2].Q==1)
+@test (Fblocks[1].J==8) & (Fblocks[2].J==4)
 end
