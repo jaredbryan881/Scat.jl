@@ -67,7 +67,7 @@ function time_scatteringTransform_J(J::Vector{Int64}, N::Int64)
         x=ones(2^N)
         FilterBanks = get_FilterBanks(N, Q, J[i], σ0)
         Transform = ScatteringTransform1d(2, Q, [J[i], J[i]])
-        times[i] = @elapsed scatter1d(x, Transform, FilterBanks)
+        times[i] = @elapsed Scat.scatter1d(x, Transform, FilterBanks)
     end
 
     return times
