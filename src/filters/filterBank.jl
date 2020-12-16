@@ -184,55 +184,6 @@ struct FilterBank1d <: AbstractFilterBank
 end
 
 """
-    get_FilterBanks(N, Q, J, σ0, rψ=rψ, α=α)
-
-Get filter banks for every layer.
-
-# Arguments
-- `N::Int64`: log2(signal length)
-- `Q::Vector{Int64}`: Number of wavelets per octave for each layer.
-- `J::Vector{Int64}`: Maximum scale of the filters for each layer
-- `σ0::Vector{Float64}`: Bandwidth of the low-pass filter for each layer
-- `rψ`::Float64: Parameter controlling frequency width of filters.
-- `α::Float64`: Parameter controlling allowable error, with error∝1/α
-"""
-function get_FilterBanks(N::Int64, Q::Vector{Int64}, J::Vector{Int64}, σ0::Vector{Float64}; rψ::Float64=sqrt(0.5), α::Float64=5.0)
-    FilterBanks=Vector{FilterBank1d}(undef, length(Q))
-    for i=1:length(Q)
-        FilterBanks[i] = FilterBank1d(N, Q[i], J[i], σ0[i], rψ=rψ, α=α)
-    end
-    return FilterBanks
-end
-"""
-    get_FilterBanks(N, Q, J, σ0, rψ=rψ, α=α)
-
-Convenience method fo getting filter banks for each layer with common σ0.
-"""
-function get_FilterBanks(N::Int64, Q::Vector{Int64}, J::Vector{Int64}, σ0::Float64; rψ::Float64=sqrt(0.5), α::Float64=5.0)
-    σ0s = repeat([σ0], length(Q))
-    get_FilterBanks(N, Q, J, σ0s; rψ=rψ, α=α)
-end
-"""
-    get_FilterBanks(N, Q, J, σ0, rψ=rψ, α=α)
-
-Convenience method fo getting filter banks for each layer with common J.
-"""
-function get_FilterBanks(N::Int64, Q::Vector{Int64}, J::Int64, σ0::Vector{Float64}; rψ::Float64=sqrt(0.5), α::Float64=5.0)
-    Js = repeat([J], length(Q))
-    get_FilterBanks(N, Q, Js, σ0; rψ=rψ, α=α)
-end
-"""
-    get_FilterBanks(N, Q, J, σ0, rψ=rψ, α=α)
-
-Convenience method fo getting filter banks for each layer with common σ0 and J.
-"""
-function get_FilterBanks(N::Int64, Q::Vector{Int64}, J::Int64, σ0::Float64; rψ::Float64=sqrt(0.5), α::Float64=5.0)
-    σ0s = repeat([σ0], length(Q))
-    Js = repeat([J], length(Q))
-    get_FilterBanks(N, Q, Js, σ0s; rψ=rψ, α=α)
-end
-
-"""
     FilterBank1dBlock
 
 A structure for collections of 1D Morlet Wavelets and a Gaussian lowpass filter,
@@ -295,4 +246,59 @@ struct FilterBank1dBlock <: AbstractFilterBank
         end
         return new(F.N, F.J, F.Q, σs, ξs, js, F.ω, F.ϕ.ϕ, Λ)
     end
+end
+
+
+"""
+    get_FilterBanks(N, Q, J, σ0, rψ=rψ, α=α)
+
+Get filter banks for every layer.
+
+# Arguments
+- `N::Int64`: log2(signal length)
+- `Q::Vector{Int64}`: Number of wavelets per octave for each layer.
+- `J::Vector{Int64}`: Maximum scale of the filters for each layer
+- `σ0::Vector{Float64}`: Bandwidth of the low-pass filter for each layer
+- `rψ`::Float64: Parameter controlling frequency width of filters.
+- `α::Float64`: Parameter controlling allowable error, with error∝1/α
+- `typ::Any`: FilterBank1d or FilterBank1dBlock
+"""
+function get_FilterBanks(N::Int64, Q::Vector{Int64}, J::Vector{Int64}, σ0::Vector{Float64}; rψ::Float64=sqrt(0.5), α::Float64=5.0, typ::Type{T}=FilterBank1d) where T<:AbstractFilterBank
+    FilterBanks=Vector{typ}(undef, length(Q))
+    for i=1:length(Q)
+        if typ==FilterBank1d
+            FilterBanks[i] = FilterBank1d(N, Q[i], J[i], σ0[i], rψ=rψ, α=α)
+        elseif typ==FilterBank1dBlock
+            FilterBanks[i] = FilterBank1dBlock(N, Q[i], J[i], σ0[i], rψ=rψ, α=α)
+        end
+    end
+    return FilterBanks
+end
+"""
+    get_FilterBanks(N, Q, J, σ0, rψ=rψ, α=α)
+
+Convenience method fo getting filter banks for each layer with common σ0.
+"""
+function get_FilterBanks(N::Int64, Q::Vector{Int64}, J::Vector{Int64}, σ0::Float64; rψ::Float64=sqrt(0.5), α::Float64=5.0, typ::Type{T}=FilterBank1d) where T<:AbstractFilterBank
+    σ0s = repeat([σ0], length(Q))
+    get_FilterBanks(N, Q, J, σ0s; rψ=rψ, α=α, typ=typ)
+end
+"""
+    get_FilterBanks(N, Q, J, σ0, rψ=rψ, α=α)
+
+Convenience method fo getting filter banks for each layer with common J.
+"""
+function get_FilterBanks(N::Int64, Q::Vector{Int64}, J::Int64, σ0::Vector{Float64}; rψ::Float64=sqrt(0.5), α::Float64=5.0, typ::Type{T}=FilterBank1d) where T<:AbstractFilterBank
+    Js = repeat([J], length(Q))
+    get_FilterBanks(N, Q, Js, σ0; rψ=rψ, α=α, typ=typ)
+end
+"""
+    get_FilterBanks(N, Q, J, σ0, rψ=rψ, α=α)
+
+Convenience method fo getting filter banks for each layer with common σ0 and J.
+"""
+function get_FilterBanks(N::Int64, Q::Vector{Int64}, J::Int64, σ0::Float64; rψ::Float64=sqrt(0.5), α::Float64=5.0, typ::Type{T}=FilterBank1d) where T<:AbstractFilterBank
+    σ0s = repeat([σ0], length(Q))
+    Js = repeat([J], length(Q))
+    get_FilterBanks(N, Q, Js, σ0s; rψ=rψ, α=α, typ=typ)
 end
