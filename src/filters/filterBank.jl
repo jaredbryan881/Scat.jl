@@ -1,4 +1,4 @@
-export get_filter_params, FilterBank1d, get_FilterBanks
+export get_filter_params, FilterBank1d, get_FilterBanks, FilterBank1dBlock
 
 """
     ξmax(Q)
@@ -147,7 +147,7 @@ abstract type AbstractFilterBank end
 """
     FilterBank1d
 
-A structure for collections of 1D Morlet Wavelets
+A structure for collections of 1D Morlet Wavelets and a Gaussian lowpass filter
 
 ## Fields: FilterBank1d
  | **Field** | **Description** |
@@ -166,7 +166,7 @@ struct FilterBank1d <: AbstractFilterBank
 
     ω::Vector{Float64} # frequencies
     ϕ::GaussianFilter # low-pass filter
-    Λ::Vector{MorletWavelet} # Fourier-transformed Morlet wavelets stored in a block
+    Λ::Vector{MorletWavelet} # Fourier-transformed Morlet wavelets stored in a vector
 
     function FilterBank1d(N::Int64, Q::Int64, J::Int64, σ0::Float64; rψ::Float64=sqrt(0.5), α::Float64=5.0)
         σs, ξs, js = get_filter_params(Q, σ0/2^J, rψ=rψ, α=α)
@@ -199,7 +199,7 @@ Get filter banks for every layer.
 function get_FilterBanks(N::Int64, Q::Vector{Int64}, J::Vector{Int64}, σ0::Vector{Float64}; rψ::Float64=sqrt(0.5), α::Float64=5.0)
     FilterBanks=Vector{FilterBank1d}(undef, length(Q))
     for i=1:length(Q)
-        FilterBanks[i] = FilterBank1d(N, Q[i], J[i], σ0[i])
+        FilterBanks[i] = FilterBank1d(N, Q[i], J[i], σ0[i], rψ=rψ, α=α)
     end
     return FilterBanks
 end
@@ -230,4 +230,69 @@ function get_FilterBanks(N::Int64, Q::Vector{Int64}, J::Int64, σ0::Float64; rψ
     σ0s = repeat([σ0], length(Q))
     Js = repeat([J], length(Q))
     get_FilterBanks(N, Q, Js, σ0s; rψ=rψ, α=α)
+end
+
+"""
+    FilterBank1dBlock
+
+A structure for collections of 1D Morlet Wavelets and a Gaussian lowpass filter,
+both stored as arrays.
+
+## Fields: FilterBank1d
+ | **Field** | **Description** |
+ |:----------|:----------------|
+ | :N        | log2(signal length) |
+ | :J        | log2(max filter scale) |
+ | :Q        | Number of wavelets per octave |
+ | :σs       | Bandwidth of filters |
+ | :ξs       | Central frequencies of filters |
+ | :js       | Maximum acceptable subsampling |
+ | :σg       | Bandwidth of gaussian lowpass filter |
+ | :ω        | Frequencies |
+ | :ϕ        | Fourier transformed low-pass Gaussian filter |
+ | :Λ        | Fourier transformed Morlet wavelets |
+"""
+struct FilterBank1dBlock <: AbstractFilterBank
+    N::Int64 # log2 length of filter in time domain
+    J::Int # log2 maximum scale of filters
+    Q::Int # Number of wavelets per octave
+
+    # these would have been in the MorletWavelet objects
+    σs::Vector{Float64}
+    ξs::Vector{Float64}
+    js::Vector{Int64}
+    # this would have been in the GaussianFilter object
+    σg::Float64
+
+    ω::Vector{Float64} # frequencies
+    ϕ::Vector{Float64} # low-pass filter
+    Λ::Array{Float64,2} # Fourier-transformed Morlet wavelets stored in a block
+
+    function FilterBank1dBlock(N::Int64, Q::Int64, J::Int64, σ0::Float64; rψ::Float64=sqrt(0.5), α::Float64=5.0)
+        σs, ξs, js = get_filter_params(Q, σ0/2^J, rψ=rψ, α=α)
+        ω = FFTW.fftfreq(2^N)
+
+        Λ = Array{Float64,2}(undef, 2^N, length(σs))
+        ϕ = GaussianFilter(2^N, σ0/2^J)
+        for i=1:length(σs)
+            γ = GaborWavelet(2^N, σs[i], ξs[i], js[i])
+            Λ[:, i] = MorletWavelet(γ, ϕ).ψ
+        end
+
+        return new(N, J, Q, σs, ξs, js, ϕ.σ, ω, ϕ.ϕ, Λ)
+    end
+
+    function FilterBank1dBlock(F::FilterBank1d)
+        Λ = Array{Float64,2}(undef, 2^F.N, length(F.Λ))
+        σs = Vector{Float64}(undef, length(F.Λ))
+        ξs = Vector{Float64}(undef, length(F.Λ))
+        js = Vector{Int64}(undef, length(F.Λ))
+        for i=1:length(F.Λ)
+            Λ[:,i].=F.Λ[i].ψ
+            σs[i]=F.Λ[i].σ
+            ξs[i]=F.Λ[i].ξ
+            js[i]=F.Λ[i].j
+        end
+        return new(F.N, F.J, F.Q, σs, ξs, js, F.ω, F.ϕ.ϕ, Λ)
+    end
 end

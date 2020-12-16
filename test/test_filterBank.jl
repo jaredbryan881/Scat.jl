@@ -125,3 +125,41 @@ FilterBanks = get_FilterBanks(N,Q,J,σ0)
 @test (FilterBanks[1].Q==Q[1]) & (FilterBanks[2].Q==Q[2])
 @test (FilterBanks[1].J==J[1]) & (FilterBanks[2].J==J[2])
 end
+
+# test FilterBank1dBlock struct
+@testset "Morlet wavelet filter bank block" begin
+# test inner constructor
+N=12
+Q=12
+J=8
+σ0=0.1
+F = FilterBank1d(N, Q, J, σ0)
+Fblock = FilterBank1dBlock(N, Q, J, σ0)
+# TODO: Find a better way to test the equality of the FilterBank1d and FilterBank1dBlock fields
+testBoolΛ=true
+testBoolσ=true
+testBoolξ=true
+testBoolj=true
+for i=1:length(F.Λ)
+    if F.Λ[i].ψ != Fblock.Λ[:,i]
+        testBoolΛ=false
+    end
+    if F.Λ[i].σ != Fblock.σs[i]
+        testBoolσ=false
+    end
+    if F.Λ[i].ξ != Fblock.ξs[i]
+        testBoolξ=false
+    end
+    if F.Λ[i].j != Fblock.js[i]
+        testBoolj=false
+    end
+end
+# test whether morlet wavelets are the same
+@test testBoolΛ=true
+@test testBoolσ=true
+@test testBoolξ=true
+@test testBoolj=true
+# test whether gaussian filter is the same
+@test F.ϕ.ϕ==Fblock.ϕ
+@test F.ϕ.σ==Fblock.σg
+end
