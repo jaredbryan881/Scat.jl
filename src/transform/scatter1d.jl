@@ -14,9 +14,9 @@ Apply one layer of the wavelet scattering transform, calling future layers recur
  - `Transform::ScatteringTransform1d`: ScatteringTransform1d object containing information about the total transform.
  - `FilterBanks::Vector{FilterBank1d}`: Filter banks for each layer of the scattering transform.
 """
-function scatter1d_layer(S::Scattered, i::Int64, j::Int64, nDone::Vector{Int64}, x_hat::Vector{Complex{Float64}}, Transform::ScatteringTransform1d, FilterBanks::Vector{FilterBank1d})
+function scatter1d_layer(S::Scattered, i::Int64, j::Int64, nDone::Vector{Int64}, x_hat::Vector{Complex{Float64}}, Transform::ScatteringTransform1d, FilterBanks::Vector{FilterBank1d}; subsample::Bool=true)
     for ψ in FilterBanks[i].Λ
-        if ψ.j > j
+        if ψ.j > j || ~subsample
             # convolve signal with morlet wavelet, transform back to the time domain, and take the modulus
             U_hat = fft(abs.(ifft(x_hat .* ψ.ψ)))
 
@@ -43,21 +43,21 @@ Calculate the 1d wavelet scattering transform.
  - `Transform::ScatteringTransform1d`: Scattering transform object.
  - `FilterBanks::Vector{FilterBank1d}`: Filter banks for each layer of the scattering transform.
 """
-function scatter1d(x::Vector{Float64}, Transform::ScatteringTransform1d, FilterBanks::Vector{FilterBank1d})
+function scatter1d(x::Vector{Float64}, Transform::ScatteringTransform1d, FilterBanks::Vector{FilterBank1d}; subsample::Bool=true)
     @assert length(FilterBanks)==Transform.D "The number of filter banks should equal the scattering transform depth.
                                               Got $(length(FilterBanks)) filter banks and $(Transform.D) layers."
 
     # Transform the signal to the frequency domain
     x_hat = FFTW.fft(x)
     # create Scattered object to hold the scattering coefficients
-    S = Scattered1d(FilterBanks)
+    S = Scattered1d(FilterBanks, subsample=subsample)
 
     # zeroth order scattering coefficients are a simple averaging of the
     S.Coeff[1] .= real.(ifft(x_hat .* FilterBanks[1].ϕ.ϕ))
     nDone=ones(Int, Transform.D)
     # higher order scattering coefficients are computed recursively
     # seed j=0 to allow all filters for the first layer
-    scatter1d_layer(S, 1, -1, nDone, x_hat, Transform, FilterBanks)
+    scatter1d_layer(S, 1, -1, nDone, x_hat, Transform, FilterBanks, subsample=subsample)
 
     return S
 end

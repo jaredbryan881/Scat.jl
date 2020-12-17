@@ -19,7 +19,7 @@ struct Scattered1d <: Scattered
     nFilters::Vector{Int64} # number of filters in each layer
     Coeff::Vector{Array{Float64,2}} # scattering coefficients for each layer
 
-    function Scattered1d(F::Vector{FilterBank1d})
+    function Scattered1d(F::Vector{FilterBank1d}; subsample::Bool=true)
         nFilters = Vector{Int64}(undef, length(F)+1)
         Coeff = Vector{Array{Float64,2}}(undef, length(F)+1)
 
@@ -29,13 +29,14 @@ struct Scattered1d <: Scattered
         Coeff[1] = Array{Float64,2}(undef, T, 1)
 
         # higher order scattering coefficients
+        nVect=1
         for i=1:length(F)
             nFilters[i+1] = length(F[i].Λ)
-            if i>=2
+            if i>=2 && subsample
                 # count the number of js in the second layer greater than js in the first layer
                 nVect=sum([length([ψ2.j for ψ2 in F[i].Λ if ψ2.j>ψ1.j]) for ψ1 in F[i-1].Λ])
             else
-                nVect=length(F[i].Λ)
+                nVect*=length(F[i].Λ)
             end
             Coeff[i+1] = Array{Float64,2}(undef, T, nVect)
         end
