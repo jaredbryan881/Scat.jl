@@ -1,32 +1,35 @@
-export scatter1d, scatter1d_layer
+export scatter1d
 
 # depth-first scattering tree traversal
 """
-    scatter1d_layer(S, i, x_hat, Transform, FilterBanks)
+    scatter1d_layer(S, i, j, nDone, x_hat, Transform, FilterBanks)
 
 Apply one layer of the wavelet scattering transform, calling future layers recursively.
 
 # Arguments
  - `S::Scattered`: Scattered object for holding scattering coefficients.
  - `i::Int64`: Index of the current scattering layer.
+ - `j::Int64`: Max subsampling accepted for the current node
  - `x_hat::Vector{Complex{Float64}}`: Fourier transformed input data vector.
  - `Transform::ScatteringTransform1d`: ScatteringTransform1d object containing information about the total transform.
  - `FilterBanks::Vector{FilterBank1d}`: Filter banks for each layer of the scattering transform.
 """
-function scatter1d_layer(S::Scattered, i::Int64, nDone::Vector{Int64}, x_hat::Vector{Complex{Float64}}, Transform::ScatteringTransform1d, FilterBanks::Vector{FilterBank1d})
-    for (j, ψ) in enumerate(FilterBanks[i].Λ)
-        # convolve signal with morlet wavelet, transform back to the time domain, and take the modulus
-        U_hat = fft(abs.(ifft(x_hat .* ψ.ψ)))
+function scatter1d_layer(S::Scattered, i::Int64, j::Int64, nDone::Vector{Int64}, x_hat::Vector{Complex{Float64}}, Transform::ScatteringTransform1d, FilterBanks::Vector{FilterBank1d})
+    for ψ in FilterBanks[i].Λ
+        if ψ.j > j
+            # convolve signal with morlet wavelet, transform back to the time domain, and take the modulus
+            U_hat = fft(abs.(ifft(x_hat .* ψ.ψ)))
 
-        # stop scattering when we reach the last layer
-        if i < Transform.D
-            scatter1d_layer(S, i+1, nDone, U_hat, Transform, FilterBanks)
+            # stop scattering when we reach the last layer
+            if i < Transform.D
+                scatter1d_layer(S, i+1, ψ.j, nDone, U_hat, Transform, FilterBanks)
+            end
+
+            # apply lowpass filter
+            # result should be real-valued, so cast to real
+            S.Coeff[i+1][:, nDone[i]] .= real.(ifft(U_hat .* FilterBanks[i].ϕ.ϕ))
+            nDone[i]+=1
         end
-
-        # apply lowpass filter
-        # result should be real-valued, so cast to real
-        S.Coeff[i+1][:, nDone[i]] .= real.(ifft(U_hat .* FilterBanks[i].ϕ.ϕ))
-        nDone[i]+=1
     end
 end
 
@@ -53,7 +56,8 @@ function scatter1d(x::Vector{Float64}, Transform::ScatteringTransform1d, FilterB
     S.Coeff[1] .= real.(ifft(x_hat .* FilterBanks[1].ϕ.ϕ))
     nDone=ones(Int, Transform.D)
     # higher order scattering coefficients are computed recursively
-    scatter1d_layer(S, 1, nDone, x_hat, Transform, FilterBanks)
+    # seed j=0 to allow all filters for the first layer
+    scatter1d_layer(S, 1, -1, nDone, x_hat, Transform, FilterBanks)
 
     return S
 end
