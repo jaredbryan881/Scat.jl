@@ -18,6 +18,7 @@ for ψ in FilterBank1.Λ[2:end]
 end
 plot!(ω, FFTW.fftshift(FilterBank1.ϕ.ϕ), xlims=(0.0, 0.5), linewidth=2, color=:crimson, legend=false)
 xlabel!("Frequency")
+savefig("FilterBank1.png")
 
 # Plot filters for the second layer
 ω = FFTW.fftshift(FilterBank2.ω)
@@ -27,8 +28,10 @@ for ψ in FilterBank2.Λ[2:end]
 end
 plot!(ω, FFTW.fftshift(FilterBank2.ϕ.ϕ), xlims=(0.0, 0.5), linewidth=2, color=:crimson, legend=false)
 xlabel!("Frequency")
+savefig("FilterBank2.png")
 
 # plot filter in the time domain
 plot(real.(FFTW.fftshift(FFTW.ifft(FilterBank1.Λ[74].ψ))), linewidth=2, color=:steelblue, label="Real", axis=nothing)
 plot!(imag.(FFTW.fftshift(FFTW.ifft(FilterBank1.Λ[74].ψ))), linewidth=2, linestyle=:dash, color=:black, label="Imaginary", axis=nothing)
 xlabel!("Time")
+savefig("MorletWavelet.png")
