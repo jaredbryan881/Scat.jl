@@ -16,13 +16,13 @@ Apply one layer of the wavelet scattering transform, calling future layers recur
 """
 function scatter1d_layer(S::Scattered, i::Int64, j::Int64, nDone::Vector{Int64}, x_hat::Vector{Complex{Float64}}, Transform::ScatteringTransform1d, FilterBanks::Vector{FilterBank1d}; subsample::Bool=true)
     for ψ in FilterBanks[i].Λ
-        if ψ.j > j || ~subsample
+        if ψ.j > j || subsample==false
             # convolve signal with morlet wavelet, transform back to the time domain, and take the modulus
             U_hat = fft(abs.(ifft(x_hat .* ψ.ψ)))
 
             # stop scattering when we reach the last layer
             if i < Transform.D
-                scatter1d_layer(S, i+1, ψ.j, nDone, U_hat, Transform, FilterBanks)
+                scatter1d_layer(S, i+1, ψ.j, nDone, U_hat, Transform, FilterBanks, subsample=subsample)
             end
 
             # apply lowpass filter
